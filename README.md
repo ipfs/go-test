@@ -1,4 +1,4 @@
-# :test_tube: test
+# :test_tube: go-test
 [![Go Reference](https://pkg.go.dev/badge/github.com/ipfs/go-test.svg)](https://pkg.go.dev/github.com/ipfs/go-test)
 [![Go Test](https://github.com/ipfs/go-test/actions/workflows/go-test.yml/badge.svg)](https://github.com/ipfs/go-test/actions/workflows/go-test.yml)
 > A testing utility library.

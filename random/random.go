@@ -8,15 +8,22 @@ import (
 
 	blocks "github.com/ipfs/go-block-format"
 	"github.com/ipfs/go-cid"
-	"github.com/ipni/go-libipni/ingest/schema"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/multiformats/go-multiaddr"
+	"github.com/multiformats/go-multicodec"
 	"github.com/multiformats/go-multihash"
 )
 
 var initSeed int64
 var globalSeed atomic.Int64
+
+var cidPrefix = cid.Prefix{
+	Version:  1,
+	Codec:    uint64(multicodec.DagJson),
+	MhType:   uint64(multicodec.Sha2_256),
+	MhLength: -1,
+}
 
 func init() {
 	SetSeed(time.Now().UTC().UnixNano())
@@ -71,7 +78,6 @@ func Bytes(n int) []byte {
 // Cids returns a slice of n random unique CIDs.
 func Cids(n int) []cid.Cid {
 	rng := rand.New(rand.NewSource(globalSeed.Add(1)))
-	prefix := schema.Linkproto.Prefix
 	cids := make([]cid.Cid, n)
 	set := make(map[string]struct{})
 	for i := 0; i < n; i++ {
@@ -81,7 +87,7 @@ func Cids(n int) []cid.Cid {
 			i--
 			continue
 		}
-		c, err := prefix.Sum(b)
+		c, err := cidPrefix.Sum(b)
 		if err != nil {
 			panic(err)
 		}
@@ -134,7 +140,6 @@ func HttpMultiaddrs(n int) []multiaddr.Multiaddr {
 // Multihashes returns a slice of n random unique Multihashes.
 func Multihashes(n int) []multihash.Multihash {
 	rng := rand.New(rand.NewSource(globalSeed.Add(1)))
-	prefix := schema.Linkproto.Prefix
 	set := make(map[string]struct{})
 	mhashes := make([]multihash.Multihash, n)
 	for i := 0; i < n; i++ {
@@ -144,7 +149,7 @@ func Multihashes(n int) []multihash.Multihash {
 			i--
 			continue
 		}
-		c, err := prefix.Sum(b)
+		c, err := cidPrefix.Sum(b)
 		if err != nil {
 			panic(err.Error())
 		}

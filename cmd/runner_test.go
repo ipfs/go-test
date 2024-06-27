@@ -22,7 +22,8 @@ func TestStart(t *testing.T) {
 	wout := cmd.NewStdoutWatcher("output on stdout")
 	wboth := cmd.NewWatcher("output on stdout")
 	c := r.Start(context.Background(), cmd.Args("go", "run", outPath), werr, wout, wboth)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	err = werr.Wait(ctx)

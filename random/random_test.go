@@ -140,3 +140,30 @@ func TestSequence(t *testing.T) {
 	t.Log("last seq num: ", lastNum)
 	require.Equal(t, secondNum+(seqCount*seqSize)+1, lastNum, "expected lastnum to be %d + %d + 1, was %d", secondNum, seqCount*seqSize, lastNum)
 }
+
+func TestNewRand(t *testing.T) {
+	rng1 := random.NewSeededRand(137)
+	rng2 := random.NewSeededRand(137)
+	allEqual := true
+	for i := 0; i < 100; i++ {
+		n1 := rng1.Int()
+		n2 := rng2.Int()
+		if n1 != n2 {
+			allEqual = false
+			break
+		}
+	}
+	require.True(t, allEqual)
+
+	rng1 = random.NewRand()
+	rng2 = random.NewRand()
+	for i := 0; i < 100; i++ {
+		n1 := rng1.Int()
+		n2 := rng2.Int()
+		if n1 != n2 {
+			allEqual = false
+			break
+		}
+	}
+	require.False(t, allEqual)
+}

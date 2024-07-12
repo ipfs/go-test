@@ -30,14 +30,27 @@ func init() {
 	SetSeed(time.Now().UTC().UnixNano())
 }
 
-// Returns the initial seed used for the pseudo-random number generator.
-// Calling SetSeed(Seed()) each time before generating random items will cause
-// items with the same values to be generated.
+// NewRand returns a new pseudo-random number source, seeded with the next
+// value of a global sequence.
+func NewRand() *rand.Rand {
+	return NewSeededRand(globalSeed.Add(1))
+}
+
+// NewSeededRand returns a new pseudo-random number source seeded with the
+// specified value.
+func NewSeededRand(seed int64) *rand.Rand {
+	return rand.New(rand.NewSource(seed))
+}
+
+// Returns the initial seed used for the pseudo-random number generator, or the
+// most recent value set by SetSeed.
 func Seed() int64 {
 	return initSeed
 }
 
-// Sets the seed for the pseudo-random number generator
+// Sets the seed for the pseudo-random number generator. Calling
+// SetSeed(Seed()) each time before generating random items will cause items
+// with the same values to be generated.
 func SetSeed(seed int64) {
 	initSeed = seed
 	globalSeed.Store(seed)
@@ -49,7 +62,7 @@ func SetSeed(seed int64) {
 func Addrs(n int) []string {
 	addrs := make([]string, n)
 	addrSet := make(map[string]struct{})
-	rng := rand.New(rand.NewSource(globalSeed.Add(1)))
+	rng := NewRand()
 	for i := 0; i < n; i++ {
 		addr := fmt.Sprintf("/ip4/%d.%d.%d.%d/tcp/%d", rng.Int()%255, rng.Intn(254)+1, rng.Intn(254)+1, rng.Intn(254)+1, rng.Intn(48157)+1024)
 		if _, ok := addrSet[addr]; ok {
@@ -73,7 +86,7 @@ func BlocksOfSize(n int, size int) []blocks.Block {
 // Bytes returns a byte array of the given size with random values.
 func Bytes(n int) []byte {
 	data := make([]byte, n)
-	rng := rand.New(rand.NewSource(globalSeed.Add(1)))
+	rng := NewRand()
 	rng.Read(data)
 	return data
 }
@@ -81,7 +94,7 @@ func Bytes(n int) []byte {
 // Cids returns a slice of n random unique CIDs.
 func Cids(n int) []cid.Cid {
 	cids := make([]cid.Cid, n)
-	rng := rand.New(rand.NewSource(globalSeed.Add(1)))
+	rng := NewRand()
 	set := make(map[string]struct{})
 	for i := 0; i < n; i++ {
 		b := make([]byte, 10*n)
@@ -101,7 +114,7 @@ func Cids(n int) []cid.Cid {
 
 // Identity returns a random unique peer ID, private key, and public key.
 func Identity() (peer.ID, crypto.PrivKey, crypto.PubKey) {
-	rng := rand.New(rand.NewSource(globalSeed.Add(1)))
+	rng := NewRand()
 	privKey, pubKey, err := crypto.GenerateKeyPairWithReader(crypto.Ed25519, 256, rng)
 	if err != nil {
 		panic(err)
@@ -143,7 +156,7 @@ func HttpMultiaddrs(n int) []multiaddr.Multiaddr {
 // Multihashes returns a slice of n random unique Multihashes.
 func Multihashes(n int) []multihash.Multihash {
 	mhashes := make([]multihash.Multihash, n)
-	rng := rand.New(rand.NewSource(globalSeed.Add(1)))
+	rng := NewRand()
 	set := make(map[string]struct{})
 	for i := 0; i < n; i++ {
 		b := make([]byte, 10*n+16)
@@ -161,10 +174,10 @@ func Multihashes(n int) []multihash.Multihash {
 	return mhashes
 }
 
-// Peers returns a slice fo n random peer IDs.
+// Peers returns a slice of n random peer IDs.
 func Peers(n int) []peer.ID {
 	peerIDs := make([]peer.ID, n)
-	rng := rand.New(rand.NewSource(globalSeed.Add(1)))
+	rng := NewRand()
 	for i := 0; i < n; i++ {
 		_, publicKey, err := crypto.GenerateEd25519Key(rng)
 		if err != nil {
@@ -179,13 +192,13 @@ func Peers(n int) []peer.ID {
 	return peerIDs
 }
 
-// Sequence returns a series of monotonicaly increasing numbers, starting at
+// Sequence returns a series of monotonically increasing numbers, starting at
 // the next unique global sequence value. Any current calls to Sequence will
 // not generate any overlapping values.
 //
 // The sequence numbers themselves are not random, only the global starting
 // value of the sequence numbers is random. This ensures that all sequences
-// generated withing a test are unique, assuming < 2^64 values are generated,
+// generated within a test are unique, assuming < 2^64 values are generated,
 // but start out at a random value.
 func Sequence(n int) []uint64 {
 	if n == 1 {

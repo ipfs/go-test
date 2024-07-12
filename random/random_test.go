@@ -2,8 +2,10 @@ package random_test
 
 import (
 	"strings"
+	"sync"
 	"testing"
 
+	blocks "github.com/ipfs/go-block-format"
 	"github.com/ipfs/go-test/random"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/multiformats/go-multihash"
@@ -21,10 +23,11 @@ func TestBytes(t *testing.T) {
 
 func TestBlocksOfSize(t *testing.T) {
 	const blockSize = 64
-	blocks := random.BlocksOfSize(3, blockSize)
-	require.Len(t, blocks, 3)
-	for _, b := range blocks {
+	blks := random.BlocksOfSize(3, blockSize)
+	require.Len(t, blks, 3)
+	for _, b := range blks {
 		require.Equal(t, blockSize, len(b.RawData()))
+		require.Equal(t, blocks.NewBlock(b.RawData()).Cid(), b.Cid(), "block CIDs mismatch")
 	}
 }
 
@@ -84,9 +87,56 @@ func TestSeed(t *testing.T) {
 
 	random.SetSeed(initSeed)
 	b1 := random.Bytes(32)
+	firstNum := random.SequenceNext()
 
 	random.SetSeed(initSeed)
 	b2 := random.Bytes(32)
+	secondNum := random.SequenceNext()
 
 	require.Equal(t, b1, b2)
+	require.Equal(t, firstNum, secondNum)
+}
+
+func TestSequence(t *testing.T) {
+	const (
+		seqCount = 5
+		seqSize  = 10
+	)
+	firstNum := random.SequenceNext()
+	secondNum := random.Sequence(1)[0]
+	require.Equal(t, firstNum+1, secondNum)
+
+	seen := make(map[uint64]struct{}, seqSize*seqCount+1)
+	seen[firstNum] = struct{}{}
+	seen[secondNum] = struct{}{}
+
+	seqs := make(chan []uint64)
+	startGate := make(chan struct{})
+	var ready sync.WaitGroup
+	ready.Add(seqCount)
+
+	for i := 0; i < seqCount; i++ {
+		go func() {
+			ready.Done()
+			<-startGate
+			seq := random.Sequence(seqSize)
+			seqs <- seq
+		}()
+	}
+
+	ready.Wait()
+	close(startGate)
+
+	for i := 0; i < seqCount; i++ {
+		seq := <-seqs
+		for _, num := range seq {
+			_, found := seen[num]
+			require.Falsef(t, found, "sequence number %d is not unique", num)
+			seen[num] = struct{}{}
+		}
+	}
+	lastNum := random.SequenceNext()
+	t.Log("first seq num:", firstNum)
+	t.Log("last seq num: ", lastNum)
+	require.Equal(t, secondNum+(seqCount*seqSize)+1, lastNum, "expected lastnum to be %d + %d + 1, was %d", secondNum, seqCount*seqSize, lastNum)
 }

@@ -17,6 +17,7 @@ import (
 
 var initSeed int64
 var globalSeed atomic.Int64
+var globalSeqGen atomic.Uint64
 
 var cidPrefix = cid.Prefix{
 	Version:  1,
@@ -40,13 +41,15 @@ func Seed() int64 {
 func SetSeed(seed int64) {
 	initSeed = seed
 	globalSeed.Store(seed)
+	rng := rand.New(rand.NewSource(seed))
+	globalSeqGen.Store(rng.Uint64())
 }
 
 // Addrs returns a slice of n random unique addresses.
 func Addrs(n int) []string {
-	rng := rand.New(rand.NewSource(globalSeed.Add(1)))
 	addrs := make([]string, n)
 	addrSet := make(map[string]struct{})
+	rng := rand.New(rand.NewSource(globalSeed.Add(1)))
 	for i := 0; i < n; i++ {
 		addr := fmt.Sprintf("/ip4/%d.%d.%d.%d/tcp/%d", rng.Int()%255, rng.Intn(254)+1, rng.Intn(254)+1, rng.Intn(254)+1, rng.Intn(48157)+1024)
 		if _, ok := addrSet[addr]; ok {
@@ -69,16 +72,16 @@ func BlocksOfSize(n int, size int) []blocks.Block {
 
 // Bytes returns a byte array of the given size with random values.
 func Bytes(n int) []byte {
-	rng := rand.New(rand.NewSource(globalSeed.Add(1)))
 	data := make([]byte, n)
+	rng := rand.New(rand.NewSource(globalSeed.Add(1)))
 	rng.Read(data)
 	return data
 }
 
 // Cids returns a slice of n random unique CIDs.
 func Cids(n int) []cid.Cid {
-	rng := rand.New(rand.NewSource(globalSeed.Add(1)))
 	cids := make([]cid.Cid, n)
+	rng := rand.New(rand.NewSource(globalSeed.Add(1)))
 	set := make(map[string]struct{})
 	for i := 0; i < n; i++ {
 		b := make([]byte, 10*n)
@@ -112,8 +115,8 @@ func Identity() (peer.ID, crypto.PrivKey, crypto.PubKey) {
 
 // Multiaddrs returns a slice of n random unique Multiaddrs.
 func Multiaddrs(n int) []multiaddr.Multiaddr {
-	maddrs := make([]multiaddr.Multiaddr, n)
 	addrs := Addrs(n)
+	maddrs := make([]multiaddr.Multiaddr, n)
 	for i, addr := range addrs {
 		maddr, err := multiaddr.NewMultiaddr(addr)
 		if err != nil {
@@ -139,9 +142,9 @@ func HttpMultiaddrs(n int) []multiaddr.Multiaddr {
 
 // Multihashes returns a slice of n random unique Multihashes.
 func Multihashes(n int) []multihash.Multihash {
+	mhashes := make([]multihash.Multihash, n)
 	rng := rand.New(rand.NewSource(globalSeed.Add(1)))
 	set := make(map[string]struct{})
-	mhashes := make([]multihash.Multihash, n)
 	for i := 0; i < n; i++ {
 		b := make([]byte, 10*n+16)
 		rng.Read(b)
@@ -160,8 +163,8 @@ func Multihashes(n int) []multihash.Multihash {
 
 // Peers returns a slice fo n random peer IDs.
 func Peers(n int) []peer.ID {
-	rng := rand.New(rand.NewSource(globalSeed.Add(1)))
 	peerIDs := make([]peer.ID, n)
+	rng := rand.New(rand.NewSource(globalSeed.Add(1)))
 	for i := 0; i < n; i++ {
 		_, publicKey, err := crypto.GenerateEd25519Key(rng)
 		if err != nil {
@@ -174,4 +177,30 @@ func Peers(n int) []peer.ID {
 		peerIDs[i] = peerID
 	}
 	return peerIDs
+}
+
+// Sequence returns a series of monotonicaly increasing numbers, starting at
+// the next unique global sequence value. Any current calls to Sequence will
+// not generate any overlapping values.
+//
+// The sequence numbers themselves are not random, only the global starting
+// value of the sequence numbers is random. This ensures that all sequences
+// generated withing a test are unique, assuming < 2^64 values are generated,
+// but start out at a random value.
+func Sequence(n int) []uint64 {
+	if n == 1 {
+		return []uint64{globalSeqGen.Add(1)}
+	}
+	seq := make([]uint64, n)
+	seqVal := globalSeqGen.Add(uint64(n)) - uint64(n-1)
+	for i := 0; i < n; i++ {
+		seq[i] = seqVal + uint64(i)
+	}
+	return seq
+}
+
+// SequenceNext returns the next unique global sequence value. This is
+// equivalent to Sequence(1)[0].
+func SequenceNext() uint64 {
+	return globalSeqGen.Add(1)
 }

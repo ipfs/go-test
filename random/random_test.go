@@ -167,3 +167,12 @@ func TestNewRand(t *testing.T) {
 	}
 	require.False(t, allEqual)
 }
+
+func TestRead(t *testing.T) {
+	buf1 := make([]byte, 16)
+	buf2 := make([]byte, 16)
+
+	random.NewRand().Read(buf1)
+	random.NewRand().Read(buf2)
+	require.NotEqual(t, buf1, buf2)
+}

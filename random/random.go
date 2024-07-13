@@ -86,8 +86,7 @@ func BlocksOfSize(n int, size int) []blocks.Block {
 // Bytes returns a byte array of the given size with random values.
 func Bytes(n int) []byte {
 	data := make([]byte, n)
-	rng := NewRand()
-	rng.Read(data)
+	NewRand().Read(data)
 	return data
 }
 
@@ -114,8 +113,7 @@ func Cids(n int) []cid.Cid {
 
 // Identity returns a random unique peer ID, private key, and public key.
 func Identity() (peer.ID, crypto.PrivKey, crypto.PubKey) {
-	rng := NewRand()
-	privKey, pubKey, err := crypto.GenerateKeyPairWithReader(crypto.Ed25519, 256, rng)
+	privKey, pubKey, err := crypto.GenerateKeyPairWithReader(crypto.Ed25519, 256, NewRand())
 	if err != nil {
 		panic(err)
 	}

@@ -1,6 +1,6 @@
 module github.com/ipfs/go-test
 
-go 1.21
+go 1.22
 
 require (
 	github.com/ipfs/go-block-format v0.1.2

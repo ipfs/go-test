@@ -146,7 +146,7 @@ func HttpMultiaddrs(n int) []multiaddr.Multiaddr {
 		panic(err)
 	}
 	for i, ma := range maddrs {
-		maddrs[i] = multiaddr.Join(ma, scheme)
+		maddrs[i] = ma.EncapsulateC(scheme)
 	}
 	return maddrs
 }

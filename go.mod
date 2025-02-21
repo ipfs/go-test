@@ -5,8 +5,8 @@ go 1.23
 require (
 	github.com/ipfs/go-block-format v0.2.0
 	github.com/ipfs/go-cid v0.5.0
-	github.com/libp2p/go-libp2p v0.40.0
-	github.com/multiformats/go-multiaddr v0.14.0
+	github.com/libp2p/go-libp2p v0.40.1-0.20250221225126-de6c69553d49
+	github.com/multiformats/go-multiaddr v0.14.1-0.20250221223610-b38aa8c96e9e
 	github.com/multiformats/go-multicodec v0.9.0
 	github.com/multiformats/go-multihash v0.2.3
 	github.com/stretchr/testify v1.10.0

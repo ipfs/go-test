@@ -101,4 +101,4 @@ Note: Specifying the same seed will produce the same results.
 
 ### Acknowledgments
 
-Credit to Juan Benet as the author of [`go-random-files`](https://github.com/jbenet/go-random-files) from which this code was derived.
+Credit to [Juan Benet](https://github.com/jbenet) as the author of [`go-random-files`](https://github.com/jbenet/go-random-files) from which this code was derived.

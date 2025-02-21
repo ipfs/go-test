@@ -9,13 +9,17 @@ import (
 )
 
 func main() {
-	var usage = `usage: %s [options] <path>...
-Write a random filesystem hierarchy to each <path>
+	var usage = `NAME
+  %s - Write a random filesystem hierarchy to each <path>
 
-Options:
+USAGE
+  %s [options] <path>...
+
+OPTIONS:
 `
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, usage, os.Args[0])
+		cmd := os.Args[0]
+		fmt.Fprintf(os.Stderr, usage, cmd, cmd)
 		flag.PrintDefaults()
 	}
 
@@ -31,9 +35,9 @@ Options:
 	flag.Int64Var(&cfg.FileSize, "filesize", cfg.FileSize, "bytes of random data in each file")
 	flag.IntVar(&cfg.Dirs, "dirs", cfg.Dirs, "number of subdirectories at each depth")
 	flag.IntVar(&cfg.Files, "files", cfg.Files, "number of files at each depth")
-	flag.BoolVar(&cfg.RandomDirs, "random-dirs", cfg.RandomDirs, "randomize number of subdirectories, from 1 to -Dirs")
-	flag.BoolVar(&cfg.RandomFiles, "random-files", cfg.RandomFiles, "randomize number of files, from 1 to -Files")
-	flag.BoolVar(&cfg.RandomSize, "random-size", cfg.RandomSize, "randomize file size, from 1 to -FileSize")
+	flag.BoolVar(&cfg.RandomDirs, "random-dirs", cfg.RandomDirs, "randomize number of subdirectories, from 1 to -dirs")
+	flag.BoolVar(&cfg.RandomFiles, "random-files", cfg.RandomFiles, "randomize number of files, from 1 to -files")
+	flag.BoolVar(&cfg.RandomSize, "random-size", cfg.RandomSize, "randomize file size, from 1 to -filesize")
 	flag.Int64Var(&cfg.Seed, "seed", cfg.Seed, "random seed, 0 for current time")
 	flag.Parse()
 
@@ -46,6 +50,10 @@ Options:
 	err := files.Create(cfg, paths...)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "error:", err)
+		if len(paths) < 1 {
+			fmt.Fprintln(os.Stderr)
+			flag.Usage()
+		}
 		os.Exit(1)
 	}
 }

@@ -138,15 +138,13 @@ func Multiaddrs(n int) []multiaddr.Multiaddr {
 	return maddrs
 }
 
+var httpMultiaddrComponent = multiaddr.StringCast("/http")
+
 // HttpMultiaddrs returns a slice of n random unique Multiaddrs.
 func HttpMultiaddrs(n int) []multiaddr.Multiaddr {
 	maddrs := Multiaddrs(n)
-	scheme, err := multiaddr.NewComponent("http", "")
-	if err != nil {
-		panic(err)
-	}
 	for i, ma := range maddrs {
-		maddrs[i] = multiaddr.Join(ma, scheme)
+		maddrs[i] = multiaddr.Join(ma, httpMultiaddrComponent)
 	}
 	return maddrs
 }

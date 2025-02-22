@@ -15,4 +15,4 @@ The random package contains logic for generating random test data.
 
 ## Command Line Tools
 
-Command like utilities can be found in the [`cli`](https://github.com/ipfs/go-test/tree/main/cli) directory.
+Command line utilities are located in the [`cli`](https://github.com/ipfs/go-test/tree/main/cli) directory.

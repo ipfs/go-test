@@ -1,6 +1,6 @@
 # random-files - create random filesystem hierarchies
 
-random-files creates random filesystem hierarchies for testing
+`random-files` creates random filesystem hierarchies for testing
 
 ## Install
 
@@ -13,10 +13,10 @@ go install github.com/ipfs/go-test/cli/random-files
 ```sh
 > random-files -help
 NAME
-  ./random-files - Write a random filesystem hierarchy to each <path>
+  random-files - Write a random filesystem hierarchy to each <path>
 
 USAGE
-  ./random-files [options] <path>...
+  random-files [options] <path>...
 
 OPTIONS:
   -depth int

@@ -5,7 +5,7 @@ random-files creates random filesystem hierarchies for testing
 ## Install
 
 ```
-go install github.com/ipfs/go-test/random/files/random-files
+go install github.com/ipfs/go-test/cli/random-files
 ```
 
 ## Usage

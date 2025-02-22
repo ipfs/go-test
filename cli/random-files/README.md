@@ -1,21 +1,24 @@
 # random-files - create random filesystem hierarchies
 
-random-files creates random filesystem hierarchies for testing
+`random-files` creates random filesystem hierarchies for testing
 
 ## Install
 
 ```
-go install github.com/ipfs/go-test/random/files/random-files
+go install github.com/ipfs/go-test/cli/random-files
 ```
 
 ## Usage
 
 ```sh
 > random-files -help
-usage: ./random-files [options] <path>...
-Write a random filesystem hierarchy to each <path>
+NAME
+  random-files - Write a random filesystem hierarchy to each <path>
 
-Options:
+USAGE
+  random-files [options] <path>...
+
+OPTIONS:
   -depth int
         depth of the directory tree including the root directory (default 2)
   -dirs int
@@ -23,14 +26,14 @@ Options:
   -files int
         number of files at each depth (default 10)
   -filesize int
-        file fize, or the max file size id RandomSize is true (default 4096)
+        bytes of random data in each file (default 4096)
   -q    do not print files and directories
   -random-dirs
-        randomize number of subdirectories, from 1 to -Dirs
+        randomize number of subdirectories, from 1 to -dirs
   -random-files
-        randomize number of files, from 1 to -Files
+        randomize number of files, from 1 to -files
   -random-size
-        randomize file size, from 1 to -FileSize (default true)
+        randomize file size, from 1 to -filesize (default true)
   -seed int
         random seed, 0 for current time
 ```

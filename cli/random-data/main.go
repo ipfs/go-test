@@ -49,7 +49,9 @@ OPTIONS:
 		fmt.Fprintln(os.Stderr, "missing value for size")
 		os.Exit(1)
 	}
-	fmt.Fprintln(os.Stdout)
+	if b64 {
+		fmt.Println()
+	}
 }
 
 func writeData(seed, size int64, b64 bool) error {

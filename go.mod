@@ -1,6 +1,7 @@
 module github.com/ipfs/go-test
 
 go 1.23
+toolchain go1.24.1
 
 require (
 	github.com/ipfs/go-block-format v0.2.0
@@ -28,7 +29,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
-	golang.org/x/crypto v0.33.0 // indirect
+	golang.org/x/crypto v0.35.0 // indirect
 	golang.org/x/exp v0.0.0-20250210185358-939b2ce775ac // indirect
 	golang.org/x/sys v0.30.0 // indirect
 	google.golang.org/protobuf v1.36.5 // indirect

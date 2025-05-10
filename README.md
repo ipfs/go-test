@@ -15,4 +15,6 @@ The random package contains logic for generating random test data.
 
 ## Command Line Tools
 
-Command line utilities are located in the [`cli`](https://github.com/ipfs/go-test/tree/main/cli) directory.
+Command line utilities are located in the [`cli`](https://github.com/ipfs/go-test/tree/main/cli) directory:
+- [random-data](https://github.com/ipfs/go-test/tree/main/cli/random-data#random-data---writes-random-data-to-stdout) writes random data to stdout
+- [random-files](https://github.com/ipfs/go-test/tree/main/cli/random-files#random-files---create-random-filesystem-hierarchies) creates random files in hierarchy of random directories

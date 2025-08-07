@@ -85,3 +85,27 @@ func TestRandomFilesValidation(t *testing.T) {
 	cfg.Dirs = 0
 	require.Error(t, files.Create(cfg, "foo"))
 }
+
+func TestRandomName(t *testing.T) {
+	minSize := 4
+	maxSize := 16
+	name := files.RandomName(minSize, maxSize)
+	require.GreaterOrEqual(t, len(name), minSize)
+	require.LessOrEqual(t, len(name), maxSize)
+	name = files.RandomName(maxSize, minSize)
+	require.GreaterOrEqual(t, len(name), minSize)
+	require.LessOrEqual(t, len(name), maxSize)
+
+	fixedSize := 17
+	name = files.RandomName(fixedSize)
+	require.Len(t, name, fixedSize)
+
+	belowMin := files.MinimumNameSize - 1
+	require.Panics(t, func() {
+		files.RandomName(belowMin, maxSize)
+	})
+
+	require.Panics(t, func() {
+		files.RandomName(belowMin)
+	})
+}

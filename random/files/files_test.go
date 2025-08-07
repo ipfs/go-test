@@ -100,11 +100,12 @@ func TestRandomName(t *testing.T) {
 	name = files.RandomName(fixedSize)
 	require.Len(t, name, fixedSize)
 
+	belowMin := files.MinimumNameSize - 1
 	require.Panics(t, func() {
-		files.RandomName(0, maxSize)
+		files.RandomName(belowMin, maxSize)
 	})
 
 	require.Panics(t, func() {
-		files.RandomName(0)
+		files.RandomName(belowMin)
 	})
 }

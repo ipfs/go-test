@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	minimumNameSize = 4
+	MinimumNameSize = 4
 	fileNameAlpha   = "abcdefghijklmnopqrstuvwxyz01234567890-_"
 )
 
@@ -28,7 +28,8 @@ type Config struct {
 	FileSize int64
 	// NameMaxSize is the maximum length of a random file or directory name.
 	NameMaxSize int
-	// NameMinSize is the minimum length of a random file or directory name.
+	// NameMinSize is the minimum length of a random file or directory name. It
+	// must be at least MinimumNameSize.
 	NameMinSize int
 	// Where to write display output, such as os.Stdout. Default is nil.
 	Out io.Writer
@@ -155,8 +156,8 @@ func (cfg *Config) validate() error {
 }
 
 func validateNameSize(minSize, maxSize int) error {
-	if minSize < minimumNameSize {
-		return fmt.Errorf("minimum name size must be at least %d", minimumNameSize)
+	if minSize < MinimumNameSize {
+		return fmt.Errorf("minimum name size must be at least %d", MinimumNameSize)
 	}
 	if maxSize < minSize {
 		return errors.New("maximum name size is less than minimum name size")

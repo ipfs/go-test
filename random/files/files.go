@@ -12,10 +12,11 @@ import (
 )
 
 const (
-	fileNameSize  = 16
-	fileNameAlpha = "abcdefghijklmnopqrstuvwxyz01234567890-_"
+	minimumNameSize = 2
+	fileNameAlpha   = "abcdefghijklmnopqrstuvwxyz01234567890-_"
 )
 
+// Config contains settings for creating random files and directories.
 type Config struct {
 	// Depth is the depth of the directory tree including the root directory.
 	Depth int
@@ -25,10 +26,14 @@ type Config struct {
 	Files int
 	// FileSize sets the number of random bytes in each file.
 	FileSize int64
+	// NameMaxSize is the maximum length of a random file or directory name.
+	NameMaxSize int
+	// NameMinSize is the minimum length of a random file or directory name.
+	NameMinSize int
 	// Where to write display output, such as os.Stdout. Default is nil.
 	Out io.Writer
 	// RandomDirss specifies whether or not to randomize the number of
-	// subdirectoriess from 1 to the value configured by Dirs.
+	// subdirectories from 1 to the value configured by Dirs.
 	RandomDirs bool
 	// RandomFiles specifies whether or not to randomize the number of files
 	// from 1 to the value configured by Files.
@@ -41,19 +46,91 @@ type Config struct {
 	Seed int64
 }
 
+// DefaultConfig returns default settings for creating random files and
+// directories.
 func DefaultConfig() Config {
 	return Config{
 		Depth:       2,
 		Dirs:        5,
 		Files:       10,
 		FileSize:    4096,
+		NameMaxSize: 16,
+		NameMinSize: 4,
 		RandomDirs:  false,
 		RandomFiles: false,
 		RandomSize:  true,
 	}
 }
 
-func validateConfig(cfg *Config) error {
+// Create creates random files and directories according to the provided
+// configuration. The random files and directories are created in the specified
+// root paths.
+func Create(cfg Config, roots ...string) error {
+	if len(roots) == 0 {
+		return errors.New("must provide at least 1 root directory path")
+	}
+	err := cfg.validate()
+	if err != nil {
+		return err
+	}
+
+	var rnd *rand.Rand
+	if cfg.Seed == 0 {
+		rnd = random.NewRand()
+	} else {
+		rnd = random.NewSeededRand(cfg.Seed)
+	}
+
+	for _, root := range roots {
+		err := os.MkdirAll(root, 0755)
+		if err != nil {
+			return err
+		}
+
+		err = cfg.writeTree(rnd, root, 1)
+		if err != nil {
+			return err
+		}
+
+	}
+
+	return nil
+}
+
+// RandomName generates a random file or directory name.
+//
+// If no sizes are specified, then the default minimum and maximum name sizes
+// are used. If one size is specified, then the name will have that size. If
+// two sizes are specified, then the name will have a random size between the
+// smaller and larger of the two numbers.
+func RandomName(sizes ...int) string {
+	var cfg Config
+	if len(sizes) > 0 {
+		var minSize, maxSize int
+		if len(sizes) > 1 {
+			// Random size between minimum and maximum.
+			minSize = min(sizes[0], sizes[1])
+			maxSize = max(sizes[0], sizes[1])
+		} else {
+			// Fixes size as specified.
+			minSize = sizes[0]
+			maxSize = minSize
+		}
+		err := validateNameSize(minSize, maxSize)
+		if err != nil {
+			panic(err)
+		}
+		cfg.NameMaxSize = maxSize
+		cfg.NameMinSize = minSize
+	} else {
+		// Use default random size.
+		cfg = DefaultConfig()
+	}
+
+	return cfg.randomName(random.NewRand())
+}
+
+func (cfg *Config) validate() error {
 	if cfg.Depth < 1 || cfg.Depth > 64 {
 		return errors.New("depth out of range, must be between 1 and 64")
 	}
@@ -69,43 +146,25 @@ func validateConfig(cfg *Config) error {
 	if cfg.Depth > 1 && cfg.Dirs < 1 {
 		return errors.New("dirs must be at least 1 for depth > 1")
 	}
-
-	return nil
-}
-
-func Create(cfg Config, paths ...string) error {
-	if len(paths) == 0 {
-		return errors.New("must provide at least 1 root directory path")
-	}
-	err := validateConfig(&cfg)
+	err := validateNameSize(cfg.NameMinSize, cfg.NameMaxSize)
 	if err != nil {
 		return err
 	}
 
-	var rnd *rand.Rand
-	if cfg.Seed == 0 {
-		rnd = random.NewRand()
-	} else {
-		rnd = random.NewSeededRand(cfg.Seed)
-	}
-
-	for _, root := range paths {
-		err := os.MkdirAll(root, 0755)
-		if err != nil {
-			return err
-		}
-
-		err = writeTree(rnd, root, 1, &cfg)
-		if err != nil {
-			return err
-		}
-
-	}
-
 	return nil
 }
 
-func writeTree(rnd *rand.Rand, root string, depth int, cfg *Config) error {
+func validateNameSize(minSize, maxSize int) error {
+	if minSize < minimumNameSize {
+		return fmt.Errorf("minimum name size must be at least %d", minimumNameSize)
+	}
+	if maxSize < minSize {
+		return errors.New("maximum name size is less than minimum name size")
+	}
+	return nil
+}
+
+func (cfg *Config) writeTree(rnd *rand.Rand, root string, depth int) error {
 	nFiles := cfg.Files
 	if nFiles != 0 {
 		if cfg.RandomFiles && nFiles > 1 {
@@ -113,16 +172,16 @@ func writeTree(rnd *rand.Rand, root string, depth int, cfg *Config) error {
 		}
 
 		for i := 0; i < nFiles; i++ {
-			if err := writeFile(rnd, root, cfg); err != nil {
+			if err := cfg.writeFile(rnd, root); err != nil {
 				return err
 			}
 		}
 	}
 
-	return writeSubdirs(rnd, root, depth, cfg)
+	return cfg.writeSubdirs(rnd, root, depth)
 }
 
-func writeSubdirs(rnd *rand.Rand, root string, depth int, cfg *Config) error {
+func (cfg *Config) writeSubdirs(rnd *rand.Rand, root string, depth int) error {
 	if depth == cfg.Depth {
 		return nil
 	}
@@ -134,7 +193,7 @@ func writeSubdirs(rnd *rand.Rand, root string, depth int, cfg *Config) error {
 	}
 
 	for i := 0; i < nDirs; i++ {
-		if err := writeSubdir(rnd, root, depth, cfg); err != nil {
+		if err := cfg.writeSubdir(rnd, root, depth); err != nil {
 			return err
 		}
 	}
@@ -142,8 +201,8 @@ func writeSubdirs(rnd *rand.Rand, root string, depth int, cfg *Config) error {
 	return nil
 }
 
-func writeSubdir(rnd *rand.Rand, root string, depth int, cfg *Config) error {
-	name := randomFilename(rnd)
+func (cfg *Config) writeSubdir(rnd *rand.Rand, root string, depth int) error {
+	name := cfg.randomName(rnd)
 	root = filepath.Join(root, name)
 	if err := os.MkdirAll(root, 0755); err != nil {
 		return err
@@ -153,11 +212,15 @@ func writeSubdir(rnd *rand.Rand, root string, depth int, cfg *Config) error {
 		fmt.Fprintln(cfg.Out, root+"/")
 	}
 
-	return writeTree(rnd, root, depth, cfg)
+	return cfg.writeTree(rnd, root, depth)
 }
 
-func randomFilename(rnd *rand.Rand) string {
-	n := rnd.Intn(fileNameSize-4) + 4
+func (cfg *Config) randomName(rnd *rand.Rand) string {
+	sizeDiff := cfg.NameMaxSize - cfg.NameMinSize
+	n := cfg.NameMinSize
+	if sizeDiff != 0 {
+		n += rnd.Intn(sizeDiff)
+	}
 	b := make([]byte, n)
 	for i := 0; i < n; i++ {
 		b[i] = fileNameAlpha[rnd.Intn(len(fileNameAlpha))]
@@ -165,8 +228,8 @@ func randomFilename(rnd *rand.Rand) string {
 	return string(b)
 }
 
-func writeFile(rnd *rand.Rand, root string, cfg *Config) error {
-	name := randomFilename(rnd)
+func (cfg *Config) writeFile(rnd *rand.Rand, root string) error {
+	name := cfg.randomName(rnd)
 	filePath := filepath.Join(root, name)
 	f, err := os.Create(filePath)
 	if err != nil {

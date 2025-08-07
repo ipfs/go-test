@@ -96,7 +96,7 @@ func TestRandomName(t *testing.T) {
 	require.GreaterOrEqual(t, len(name), minSize)
 	require.LessOrEqual(t, len(name), maxSize)
 
-	fixedSize := 3
+	fixedSize := 17
 	name = files.RandomName(fixedSize)
 	require.Len(t, name, fixedSize)
 

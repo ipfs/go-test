@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	minimumNameSize = 2
+	minimumNameSize = 4
 	fileNameAlpha   = "abcdefghijklmnopqrstuvwxyz01234567890-_"
 )
 

@@ -88,16 +88,10 @@ func Bytes(n int) []byte {
 // Cids returns a slice of n random unique CIDs.
 func Cids(n int) []cid.Cid {
 	cids := make([]cid.Cid, 0, n)
-	set := make(map[[32]byte]struct{})
 	rng := NewRand()
 	for len(cids) < n {
 		var b [32]byte
 		rng.Read(b[:])
-		if _, ok := set[b]; ok {
-			continue
-		}
-		set[b] = struct{}{}
-
 		h, err := multihash.Encode(b[:], multihash.SHA2_256)
 		if err != nil {
 			panic(err)
@@ -149,15 +143,9 @@ func HttpMultiaddrs(n int) []multiaddr.Multiaddr {
 func Multihashes(n int) []multihash.Multihash {
 	rng := NewRand()
 	mhashes := make([]multihash.Multihash, 0, n)
-	set := make(map[[32]byte]struct{})
 	for len(mhashes) < n {
 		var b [32]byte
 		rng.Read(b[:])
-		if _, ok := set[b]; ok {
-			continue
-		}
-		set[b] = struct{}{}
-
 		h, err := multihash.Encode(b[:], multihash.SHA2_256)
 		if err != nil {
 			panic(err.Error())

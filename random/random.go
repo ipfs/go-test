@@ -15,16 +15,11 @@ import (
 	"github.com/multiformats/go-multihash"
 )
 
-var initSeed int64
-var globalSeed atomic.Int64
-var globalSeqGen atomic.Uint64
-
-var cidPrefix = cid.Prefix{
-	Version:  1,
-	Codec:    uint64(multicodec.DagJson),
-	MhType:   uint64(multicodec.Sha2_256),
-	MhLength: -1,
-}
+var (
+	initSeed     int64
+	globalSeed   atomic.Int64
+	globalSeqGen atomic.Uint64
+)
 
 func init() {
 	SetSeed(time.Now().UTC().UnixNano())
@@ -77,7 +72,7 @@ func Addrs(n int) []string {
 // BlocksOfSize generates a slice of blocks of the specified byte size.
 func BlocksOfSize(n int, size int) []blocks.Block {
 	genBlocks := make([]blocks.Block, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		genBlocks[i] = blocks.NewBlock(Bytes(size))
 	}
 	return genBlocks
@@ -92,21 +87,22 @@ func Bytes(n int) []byte {
 
 // Cids returns a slice of n random unique CIDs.
 func Cids(n int) []cid.Cid {
-	cids := make([]cid.Cid, n)
+	cids := make([]cid.Cid, 0, n)
+	set := make(map[[32]byte]struct{})
 	rng := NewRand()
-	set := make(map[string]struct{})
-	for i := 0; i < n; i++ {
-		b := make([]byte, 10*n)
-		rng.Read(b)
-		if _, ok := set[string(b)]; ok {
-			i--
+	for len(cids) < n {
+		var b [32]byte
+		rng.Read(b[:])
+		if _, ok := set[b]; ok {
 			continue
 		}
-		c, err := cidPrefix.Sum(b)
+		set[b] = struct{}{}
+
+		h, err := multihash.Encode(b[:], multihash.SHA2_256)
 		if err != nil {
 			panic(err)
 		}
-		cids[i] = c
+		cids = append(cids, cid.NewCidV1(uint64(multicodec.DagJson), h))
 	}
 	return cids
 }
@@ -151,21 +147,22 @@ func HttpMultiaddrs(n int) []multiaddr.Multiaddr {
 
 // Multihashes returns a slice of n random unique Multihashes.
 func Multihashes(n int) []multihash.Multihash {
-	mhashes := make([]multihash.Multihash, n)
 	rng := NewRand()
-	set := make(map[string]struct{})
-	for i := 0; i < n; i++ {
-		b := make([]byte, 10*n+16)
-		rng.Read(b)
-		if _, ok := set[string(b)]; ok {
-			i--
+	mhashes := make([]multihash.Multihash, 0, n)
+	set := make(map[[32]byte]struct{})
+	for len(mhashes) < n {
+		var b [32]byte
+		rng.Read(b[:])
+		if _, ok := set[b]; ok {
 			continue
 		}
-		c, err := cidPrefix.Sum(b)
+		set[b] = struct{}{}
+
+		h, err := multihash.Encode(b[:], multihash.SHA2_256)
 		if err != nil {
 			panic(err.Error())
 		}
-		mhashes[i] = c.Hash()
+		mhashes = append(mhashes, h)
 	}
 	return mhashes
 }
@@ -174,7 +171,7 @@ func Multihashes(n int) []multihash.Multihash {
 func Peers(n int) []peer.ID {
 	peerIDs := make([]peer.ID, n)
 	rng := NewRand()
-	for i := 0; i < n; i++ {
+	for i := range n {
 		_, publicKey, err := crypto.GenerateEd25519Key(rng)
 		if err != nil {
 			panic(err)
@@ -202,7 +199,7 @@ func Sequence(n int) []uint64 {
 	}
 	seq := make([]uint64, n)
 	seqVal := globalSeqGen.Add(uint64(n)) - uint64(n-1)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		seq[i] = seqVal + uint64(i)
 	}
 	return seq

@@ -115,7 +115,7 @@ func TestSequence(t *testing.T) {
 	var ready sync.WaitGroup
 	ready.Add(seqCount)
 
-	for i := 0; i < seqCount; i++ {
+	for range seqCount {
 		go func() {
 			ready.Done()
 			<-startGate
@@ -127,7 +127,7 @@ func TestSequence(t *testing.T) {
 	ready.Wait()
 	close(startGate)
 
-	for i := 0; i < seqCount; i++ {
+	for range seqCount {
 		seq := <-seqs
 		for _, num := range seq {
 			_, found := seen[num]
@@ -145,7 +145,7 @@ func TestNewRand(t *testing.T) {
 	rng1 := random.NewSeededRand(137)
 	rng2 := random.NewSeededRand(137)
 	allEqual := true
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		n1 := rng1.Int()
 		n2 := rng2.Int()
 		if n1 != n2 {
@@ -157,7 +157,7 @@ func TestNewRand(t *testing.T) {
 
 	rng1 = random.NewRand()
 	rng2 = random.NewRand()
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		n1 := rng1.Int()
 		n2 := rng2.Int()
 		if n1 != n2 {

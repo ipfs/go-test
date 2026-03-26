@@ -75,7 +75,7 @@ func Addrs(n int) []string {
 }
 
 // DnsAddrs returns a slice of n random unique DNS addresses in the format
-// "xxxxxxxx.example.com:nnnn".
+// "xxxxxxxx.example.com:port".
 func DnsAddrs(n int) []string {
 	const (
 		nameLen     = 8

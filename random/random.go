@@ -21,6 +21,11 @@ var (
 	globalSeqGen atomic.Uint64
 )
 
+const (
+	minTcpPort = 1024
+	maxTcpPort = 65535
+)
+
 func init() {
 	SetSeed(time.Now().UTC().UnixNano())
 }
@@ -59,7 +64,7 @@ func Addrs(n int) []string {
 	addrSet := make(map[string]struct{}, n)
 	rng := NewRand()
 	for i := 0; i < n; i++ {
-		addr := fmt.Sprintf("/ip4/%d.%d.%d.%d/tcp/%d", rng.Intn(254)+1, rng.Intn(254)+1, rng.Intn(254)+1, rng.Intn(254)+1, rng.Intn(48157)+1024)
+		addr := fmt.Sprintf("/ip4/%d.%d.%d.%d/tcp/%d", rng.Intn(254)+1, rng.Intn(254)+1, rng.Intn(254)+1, rng.Intn(254)+1, rng.Intn(maxTcpPort-minTcpPort)+minTcpPort)
 		if _, ok := addrSet[addr]; ok {
 			i--
 			continue
@@ -72,16 +77,19 @@ func Addrs(n int) []string {
 // DnsAddrs returns a slice of n random unique DNS addresses in the format
 // "xxxxxxxx.example.com:nnnn".
 func DnsAddrs(n int) []string {
-	const nameLen = 8
+	const (
+		nameLen     = 8
+		lowerAsciiA = 97
+	)
 	addrs := make([]string, n)
 	addrSet := make(map[string]struct{}, n)
 	rng := NewRand()
 	for i := 0; i < n; i++ {
 		var name [nameLen]byte
 		for j := range nameLen {
-			name[j] = byte(rng.Intn(26) + 97)
+			name[j] = byte(rng.Intn(26) + lowerAsciiA)
 		}
-		addr := fmt.Sprintf("/dns4/%s.example.com/tcp/%d", name, rng.Intn(48157)+1024)
+		addr := fmt.Sprintf("/dns4/%s.example.com/tcp/%d", name, rng.Intn(maxTcpPort-minTcpPort)+minTcpPort)
 		if _, ok := addrSet[addr]; ok {
 			i--
 			continue

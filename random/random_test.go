@@ -31,6 +31,29 @@ func TestBlocksOfSize(t *testing.T) {
 	}
 }
 
+func TestMultiaddrs(t *testing.T) {
+	const n = 2000
+	ms := random.Multiaddrs(n)
+	require.Len(t, ms, n)
+	for _, ma := range ms {
+		maStr := ma.String()
+		after, ok := strings.CutPrefix(maStr, "/ip4/")
+		require.True(t, ok, "missing /ip4/ prefix")
+		require.False(t, strings.HasPrefix(after, "0."), "bad addr:", maStr)
+		require.False(t, strings.HasPrefix(after, "255."), "bad addr:", maStr)
+	}
+}
+
+func TestDnsMultiaddrs(t *testing.T) {
+	ms := random.DnsMultiaddrs(3)
+	require.Len(t, ms, 3)
+	for _, ma := range ms {
+		maStr := ma.String()
+		require.True(t, strings.HasPrefix(maStr, "/dns4/"))
+		t.Log("dns multiaddr:", maStr)
+	}
+}
+
 func TestHttpMultiaddrs(t *testing.T) {
 	hms := random.HttpMultiaddrs(3)
 	require.Len(t, hms, 3)
@@ -38,6 +61,22 @@ func TestHttpMultiaddrs(t *testing.T) {
 		maStr := ma.String()
 		require.True(t, strings.HasSuffix(maStr, "http"))
 		t.Log("http multiaddr:", maStr)
+	}
+}
+
+func TestHttpDnsAddrInfos(t *testing.T) {
+	const (
+		numPeers = 3
+		numAddrs = 2
+	)
+	addrInfos := random.HttpDnsAddrInfos(numPeers, numAddrs)
+	require.Len(t, addrInfos, numPeers)
+	for _, addrInfo := range addrInfos {
+		require.Len(t, addrInfo.Addrs, numAddrs)
+		maStr := addrInfo.Addrs[0].String()
+		require.True(t, strings.HasPrefix(maStr, "/dns4/"))
+		require.True(t, strings.HasSuffix(maStr, "http"))
+		t.Log("AddrInfo:", addrInfo)
 	}
 }
 
